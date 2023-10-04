@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source ../.venv/bin/activate
-pip3 install --upgrade build twine
+source ../pyenv/bin/activate
+python3 -m pip install --upgrade build twine
 cd ..
 echo `pwd`
 python3 -m build
