@@ -1,6 +1,6 @@
 # douglog
 
-A simple command line program that quickly creates and opens single log files with a date in a semi-organized way. Use tools like `fzf` or `ripgrep` to search through the generated logs.
+A simple command line program that quickly creates and opens single log files with a date in a semi-organized way. Use tools like [`fzf`](https://github.com/junegunn/fzf) or [`ripgrep`](https://github.com/BurntSushi/ripgrep) to search through the generated logs.
 
 ## Example Config
 
