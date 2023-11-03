@@ -9,13 +9,17 @@ Default location is `~/.config/dlog.toml`.
 ```
 editor = "nvim"
 home = "~/dlogs"
-logs = ["homelab", "work"]
+logbooks = ["homelab", "work"]
 ```
 
-`home` is where you want to store your logs. `logs` is a list of your logs (to organize separate logging). `editor` sets your editor.
+- `editor` sets your editor.
+- `home` is where you want to store your logs.
+- `logbooks` is a list of your logs (to organize separate logging).
 
 ## Usage
 
 ```
 $ dlog log <log-name>
+$ dlog list
+$ dlog search <regex>
 ```
