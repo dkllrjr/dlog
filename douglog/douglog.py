@@ -6,6 +6,7 @@ import time
 import re
 import numpy as np
 import subprocess
+from datetime import datetime
 
 #  ──────────────────────────────────────────────────────────────────────────
 # global variables
@@ -119,7 +120,7 @@ def search(ctx, regex, name):
     """
     Searches through your logs for the given REGEX. Searches through all logs unless one is specified. Results are printed as:
 
-    logbook: date: line number: line
+    logbook: filename: date: line number: line
     """
 
     def inbook(ctx, name, regex):
@@ -129,15 +130,14 @@ def search(ctx, regex, name):
 
         for file_path in file_paths:
 
+            date = datetime.utcfromtimestamp(int(file_path.stem)).isoformat()
+
             with open(file_path, 'r') as file:
 
                 for i, line in enumerate(file):
 
-                    if i == 0:
-                        date = line[2::]
-
                     if re.search(regex, line):
-                        found_line = name + ': ' + date.strip('\n') + ': ' + str(i + 1) + ': ' + line.strip('\n')
+                        found_line = name + ': ' + file_path.stem + ': ' + date + ': ' + str(i + 1) + ': ' + line.strip('\n')
                         click.echo(found_line)
 
 
