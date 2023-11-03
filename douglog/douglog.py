@@ -5,9 +5,17 @@ import os
 import time
 import re
 import numpy as np
+import subprocess
 
 #  ──────────────────────────────────────────────────────────────────────────
-# general functions
+# global variables
+
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+@click.command(context_settings=CONTEXT_SETTINGS)
+
+#  ──────────────────────────────────────────────────────────────────────────
+# global functions
 
 def logbook_not_found(name):
     click.echo(name + ' logbook not found in config.')
@@ -16,7 +24,7 @@ def logbook_not_found(name):
 #  ──────────────────────────────────────────────────────────────────────────
 # base command
 
-@click.group(invoke_without_command=True)
+@click.group(invoke_without_command=True, context_settings=CONTEXT_SETTINGS)
 @click.option('-c', '--config', default='~/.config/dlog.toml', type=str, help="Config file path", show_default=True)
 @click.pass_context
 def dlog(ctx, config):
@@ -66,7 +74,7 @@ def dlog(ctx, config):
 #  ──────────────────────────────────────────────────────────────────────────
 # log command to generate single logs
 
-@dlog.command('log', short_help='Open a new log in your editor.')
+@dlog.command('log', short_help='Open a new log in your editor.',context_settings=CONTEXT_SETTINGS)
 @click.argument('name', type=str)
 @click.pass_context
 def log(ctx, name):
@@ -90,7 +98,7 @@ def log(ctx, name):
 #  ──────────────────────────────────────────────────────────────────────────
 # list command to list logs
 
-@dlog.command()
+@dlog.command(context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def list(ctx):
     """Lists all logbooks."""
@@ -103,7 +111,7 @@ def list(ctx):
 #  ──────────────────────────────────────────────────────────────────────────
 # search command
 
-@dlog.command('search', short_help='Searches through your logs.')
+@dlog.command('search', short_help='Searches through your logs.', context_settings=CONTEXT_SETTINGS)
 @click.option('-n', '--name', type=str, help="Specified logbook to search.", default=None)
 @click.argument('regex', type=str)
 @click.pass_context
@@ -142,3 +150,19 @@ def search(ctx, regex, name):
     else:
         for name in ctx.obj['logbooks']:
             inbook(ctx, name, regex)
+
+#  ──────────────────────────────────────────────────────────────────────────
+# git command
+
+@dlog.command('git', short_help='Git manage the logbooks.', context_settings=CONTEXT_SETTINGS)
+@click.argument('git_commands', type=str, nargs=-1)
+@click.pass_context
+def git(ctx, git_commands):
+    """Git command to manage the douglog git repository."""
+
+    command = ['git', '-C', ctx.obj['home']]
+
+    for arg in git_commands:
+        command.append(arg)
+
+    subprocess.run(command)
