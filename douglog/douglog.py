@@ -8,10 +8,12 @@ import numpy as np
 from glob import glob
 import subprocess
 from datetime import datetime
+import importlib.metadata
 
 #  ──────────────────────────────────────────────────────────────────────────
 # global variables
 
+douglog_version = importlib.metadata.version('douglog')
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.command(context_settings=CONTEXT_SETTINGS)
@@ -28,6 +30,7 @@ def logbook_not_found(logbook):
 
 # done for the config
 @click.group(invoke_without_command=True, context_settings=CONTEXT_SETTINGS)
+@click.version_option(douglog_version)
 @click.option('-c', '--config', default='~/.config/dlog.toml', type=str, help="Config file path", show_default=True)
 @click.pass_context
 def dlog(ctx, config):
