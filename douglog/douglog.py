@@ -26,6 +26,7 @@ def logbook_not_found(logbook):
 #  ──────────────────────────────────────────────────────────────────────────
 # base command
 
+# done for the config
 @click.group(invoke_without_command=True, context_settings=CONTEXT_SETTINGS)
 @click.option('-c', '--config', default='~/.config/dlog.toml', type=str, help="Config file path", show_default=True)
 @click.pass_context
