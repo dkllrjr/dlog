@@ -137,42 +137,122 @@ def list(ctx, logs):
 
 @dlog.command('search', short_help='Searches through your logs.', context_settings=CONTEXT_SETTINGS)
 @click.option('-l', '--logbook', type=str, help="Specified logbook to search.", default=None)
+@click.option('-pm', '--plus-minus', 'plusminus', type=str, help="Lines above (minus) and below (plus) to show: e.g. +plus-minus or -minus+plus.", default=None)
+@click.option('-e', '--edit', type=int, help="Opens the specified file from the result list in the editor: e.g. -e 1", default=0)
 @click.argument('regex', type=str)
 @click.pass_context
-def search(ctx, regex, logbook):
+def search(ctx, logbook, plusminus, edit, regex):
     """
     Searches through your logs for the given REGEX. Searches through all logs unless one is specified. Results are printed as:
 
-    logbook: filename: date: line number: line
+    [result #] logbook: filename: date: line number +plus -minus:
+    line(s)
     """
 
-    def inbook(ctx, logbook, regex):
+    def inbook(ctx, logbook, plusminus, edit, regex, result):
 
         logbook_path = ctx.obj['home'] / Path(logbook)
         file_paths = sorted(logbook_path.glob('*.md'))
 
-        for file_path in file_paths:
+        for j, file_path in enumerate(file_paths):
 
             date = datetime.utcfromtimestamp(int(file_path.stem)).isoformat()
 
             with open(file_path, 'r') as file:
 
-                for i, line in enumerate(file):
+                lines = file.readlines()
+                for i, line in enumerate(lines):
 
                     if re.search(regex, line):
-                        found_line = logbook + ': ' + file_path.stem + ': ' + date + ': ' + str(i + 1) + ': ' + line.strip('\n')
-                        click.echo(found_line)
 
+                        found_line = '[' + str(result) + '] ' + logbook + ': ' + file_path.stem + ': ' + date + ': ' + str(i + 1)
+
+                        if plusminus is not None: # getting lines above and below hit
+
+                            plus, minus = interpret_plusminus(plusminus)
+                            if plus > 0:
+                                found_line += '+' + str(plus)
+                            if minus > 0:
+                                found_line += '-' + str(minus)
+
+                            found_line += ':'
+                            click.echo(click.style(found_line, bold=True))
+
+                            for l in lines[i-minus:i+plus+1]:
+
+                                if l is line:
+                                    click.echo(click.style(l.strip('\n'), italic=True))
+                                else:
+                                    click.echo(l.strip('\n'))
+
+                        else:
+
+                            click.echo(click.style(found_line, bold=True))
+                            click.echo(line.strip('\n'))
+
+                        if edit == result: # opening specified result in editor
+                            click.edit(filename=file_path, editor=ctx.obj['editor'])
+
+                        result += 1
+
+        return result
+
+    
+    def interpret_plusminus(plusminus):
+
+        def _get_indices(plusminus, plus=True):
+
+            symbols = ['+', '-']
+
+            if not plus:
+                symbols = symbols[::-1]
+
+            if symbols[0] in plusminus:
+
+                if symbols[1] in plusminus:
+
+                    if plusminus.find(symbols[0]) < plusminus.find(symbols[1]):
+                        return slice(plusminus.find(symbols[0]), plusminus.find(symbols[1]))
+                    else:
+                        return slice(plusminus.find(symbols[0]), None)
+
+                else:
+                    return slice(plusminus.find(symbols[0]), None)
+
+            elif symbols[1] not in plusminus and plus: # assuming plus if no symbols are given
+                return slice(None, None)
+
+            else:
+                return None
+
+
+        plus_slice = _get_indices(plusminus)
+        minus_slice = _get_indices(plusminus, plus=False)
+
+        if plus_slice is not None:
+            plus = abs(int(plusminus[plus_slice]))
+        else:
+            plus = 0
+
+        if minus_slice is not None:
+            minus = abs(int(plusminus[minus_slice]))
+        else:
+            minus = 0
+
+        return plus, minus
+
+
+    result = 1 # result hit counter
 
     if logbook:
         if logbook in ctx.obj['logbooks']:
-            inbook(ctx, logbook, regex)
+            inbook(ctx, logbook, plusminus, edit, regex, result)
         else:
             logbook_not_found(logbook)
 
     else:
         for logbook in ctx.obj['logbooks']:
-            inbook(ctx, logbook, regex)
+            result = inbook(ctx, logbook, plusminus, edit, regex, result)
 
 #  ──────────────────────────────────────────────────────────────────────────
 # git command
